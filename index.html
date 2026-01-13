@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Mobile-first viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Mobile app feel -->
+  <meta name="theme-color" content="#f6f7f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <title>16 Days</title>
+
+  <style>
+    /* ================================
+       CALM DESIGN VARIABLES
+       Change colors, spacing, or speed here
+       ================================ */
+
+    :root {
+      --bg-color: #f6f7f6;
+      --card-color: #ffffff;
+      --card-done: #dfeee3;
+      --text-main: #2f3e34;
+      --text-muted: #7a8b80;
+      --accent: #9fc7ad;
+
+      --animation-speed: 0.35s; /* Animation speed */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .quiet-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .progress {
+      margin: 20px 0 10px;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e3e7e4;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width var(--animation-speed) ease;
+    }
+
+    /* ================================
+       DAYS GRID (MOBILE OPTIMIZED)
+       ================================ */
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .day {
+      background: var(--card-color);
+      border-radius: 16px;
+      padding: 22px 0; /* Larger tap target */
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+
+      transition:
+        background var(--animation-speed) ease,
+        transform var(--animation-speed) ease,
+        opacity var(--animation-speed) ease;
+    }
+
+    .day span {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    .day.done {
+      background: var(--card-done);
+      opacity: 0.7;
+      transform: scale(0.96);
+    }
+
+    .day.done span {
+      color: var(--text-main);
+      text-decoration: line-through;
+    }
+
+    /* Gentle tap feedback */
+    .day:active {
+      transform: scale(0.985);
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <h1>16 Days</h1>
+      <div class="quiet-text">The exit is getting closer.</div>
+    </header>
+
+    <div class="progress">
+      <div class="progress-text" id="progressText">
+        0 / 16 days completed
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="days" id="daysContainer"></div>
+
+    <footer>
+      Take it gently.
+    </footer>
+  </div>
+
+  <script>
+    /* ================================
+       CONFIGURATION
+       ================================ */
+
+    const TOTAL_DAYS = 16; 
+    // ▲ Change this number to adjust total days
+
+    const STORAGE_KEY = "sixteen-days-progress";
+
+    /* ================================
+       LOAD SAVED STATE
+       ================================ */
+
+    let completedDays = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+    /* ================================
+       CREATE DAY CARDS
+       ================================ */
+
+    const container = document.getElementById("daysContainer");
+
+    for (let i = 1; i <= TOTAL_DAYS; i++) {
+      const day = document.createElement("div");
+      day.className = "day";
+      day.innerHTML = `<span>Day ${i}</span>`;
+
+      if (completedDays.includes(i)) {
+        day.classList.add("done");
+      }
+
+      day.addEventListener("click", () => {
+        // Small intentional pause before toggling
+        setTimeout(() => toggleDay(i, day), 120);
+      });
+
+      container.appendChild(day);
+    }
+
+    /* ================================
+       TOGGLE DAY STATE
+       ================================ */
+
+    function toggleDay(dayNumber, element) {
+      if (completedDays.includes(dayNumber)) {
+        completedDays = completedDays.filter(d => d !== dayNumber);
+        element.classList.remove("done");
+      } else {
+        completedDays.push(dayNumber);
+        element.classList.add("done");
+      }
+
+      saveProgress();
+      updateProgress();
+    }
+
+    /* ================================
+       SAVE TO LOCAL STORAGE
+       ================================ */
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(completedDays));
+    }
+
+    /* ================================
+       UPDATE PROGRESS DISPLAY
+       ================================ */
+
+    function updateProgress() {
+      const count = completedDays.length;
+      const percent = (count / TOTAL_DAYS) * 100;
+
+      document.getElementById("progressText").textContent =
+        `${count} / ${TOTAL_DAYS} days completed`;
+
+      document.getElementById("progressFill").style.width = percent + "%";
+    }
+
+    updateProgress();
+
+    /* ================================
+       RESET OPTION (MANUAL)
+       ================================
+       To reset:
+       - Open browser dev tools
+       - Run:
+         localStorage.removeItem("sixteen-days-progress")
+       - Refresh the page
+       ================================ */
+  </script>
+</body>
+</html>
