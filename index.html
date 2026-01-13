@@ -14,11 +14,6 @@
   <title>16 Days</title>
 
   <style>
-    /* ================================
-       CALM DESIGN VARIABLES
-       Change colors, spacing, or speed here
-       ================================ */
-
     :root {
       --bg-color: #f6f7f6;
       --card-color: #ffffff;
@@ -26,8 +21,7 @@
       --text-main: #2f3e34;
       --text-muted: #7a8b80;
       --accent: #9fc7ad;
-
-      --animation-speed: 0.35s; /* Animation speed */
+      --animation-speed: 0.35s;
     }
 
     * {
@@ -92,10 +86,6 @@
       transition: width var(--animation-speed) ease;
     }
 
-    /* ================================
-       DAYS GRID (MOBILE OPTIMIZED)
-       ================================ */
-
     .days {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -106,12 +96,11 @@
     .day {
       background: var(--card-color);
       border-radius: 16px;
-      padding: 22px 0; /* Larger tap target */
+      padding: 22px 0;
       text-align: center;
       cursor: pointer;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-
       transition:
         background var(--animation-speed) ease,
         transform var(--animation-speed) ease,
@@ -134,7 +123,6 @@
       text-decoration: line-through;
     }
 
-    /* Gentle tap feedback */
     .day:active {
       transform: scale(0.985);
     }
@@ -151,14 +139,13 @@
 <body>
   <div class="app">
     <header>
-      <h1>16 Days</h1>
-      <div class="quiet-text">The exit is getting closer.</div>
+      <!-- Heading will be updated dynamically -->
+      <h1 id="heading">16 Days</h1>
+      <div class="quiet-text">This chapter is ending...</div>
     </header>
 
     <div class="progress">
-      <div class="progress-text" id="progressText">
-        0 / 16 days completed
-      </div>
+      <div class="progress-text" id="progressText"></div>
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
       </div>
@@ -176,22 +163,13 @@
        CONFIGURATION
        ================================ */
 
-    const TOTAL_DAYS = 16; 
-    // ▲ Change this number to adjust total days
-
+    const TOTAL_DAYS = 16; // Change total days here
     const STORAGE_KEY = "sixteen-days-progress";
-
-    /* ================================
-       LOAD SAVED STATE
-       ================================ */
 
     let completedDays = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-    /* ================================
-       CREATE DAY CARDS
-       ================================ */
-
     const container = document.getElementById("daysContainer");
+    const heading = document.getElementById("heading");
 
     for (let i = 1; i <= TOTAL_DAYS; i++) {
       const day = document.createElement("div");
@@ -203,16 +181,11 @@
       }
 
       day.addEventListener("click", () => {
-        // Small intentional pause before toggling
         setTimeout(() => toggleDay(i, day), 120);
       });
 
       container.appendChild(day);
     }
-
-    /* ================================
-       TOGGLE DAY STATE
-       ================================ */
 
     function toggleDay(dayNumber, element) {
       if (completedDays.includes(dayNumber)) {
@@ -225,19 +198,12 @@
 
       saveProgress();
       updateProgress();
+      updateTitleAndHeading();
     }
-
-    /* ================================
-       SAVE TO LOCAL STORAGE
-       ================================ */
 
     function saveProgress() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(completedDays));
     }
-
-    /* ================================
-       UPDATE PROGRESS DISPLAY
-       ================================ */
 
     function updateProgress() {
       const count = completedDays.length;
@@ -249,17 +215,28 @@
       document.getElementById("progressFill").style.width = percent + "%";
     }
 
-    updateProgress();
-
     /* ================================
-       RESET OPTION (MANUAL)
-       ================================
-       To reset:
-       - Open browser dev tools
-       - Run:
-         localStorage.removeItem("sixteen-days-progress")
-       - Refresh the page
+       DYNAMIC TITLE + HEADING
        ================================ */
+
+    function updateTitleAndHeading() {
+      const remaining = TOTAL_DAYS - completedDays.length;
+      let text = "";
+
+      if (remaining > 1) {
+        text = `${remaining} Days left`;
+      } else if (remaining === 1) {
+        text = `Last day`;
+      } else {
+        text = `Done`;
+      }
+
+      document.title = text;
+      heading.textContent = text;
+    }
+
+    updateProgress();
+    updateTitleAndHeading();
   </script>
 </body>
 </html>
