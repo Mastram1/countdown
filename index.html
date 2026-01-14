@@ -132,15 +132,15 @@
   <div class="app">
 
     <div class="setup" id="setup">
-      <h1>How many days to freedom?</h1>
-      <input type="number" id="daysInput" placeholder="Enter number of days..." />
+      <h1>Select your freedom date</h1>
+      <input type="date" id="dateInput" />
       <button onclick="start()">Start</button>
     </div>
 
     <div id="main" style="display:none;">
       <header>
         <h1 id="heading"></h1>
-        <div class="quiet-text">One step closer 🚀</div>
+        <div class="quiet-text">That day is coming 🚀</div>
       </header>
 
       <div class="progress">
@@ -150,15 +150,15 @@
 
       <div class="days" id="daysContainer"></div>
 
-      <footer>🔥 Keep going. You’re getting there.</footer>
+      <footer>🔥 Keep moving forward.</footer>
     </div>
   </div>
 
   <script>
-    const TOTAL_KEY = "freedom-total-days";
+    const DATE_KEY = "freedom-date";
     const DONE_KEY = "freedom-done-days";
 
-    let totalDays = parseInt(localStorage.getItem(TOTAL_KEY));
+    let targetDate = localStorage.getItem(DATE_KEY);
     let completedDays = JSON.parse(localStorage.getItem(DONE_KEY)) || [];
 
     const setup = document.getElementById("setup");
@@ -166,7 +166,7 @@
     const container = document.getElementById("daysContainer");
     const heading = document.getElementById("heading");
 
-    if (!totalDays) {
+    if (!targetDate) {
       setup.style.display = "flex";
     } else {
       main.style.display = "block";
@@ -174,59 +174,78 @@
     }
 
     function start() {
-      const val = parseInt(document.getElementById("daysInput").value);
-      if (!val || val < 1) return;
-      localStorage.setItem(TOTAL_KEY, val);
+      const val = document.getElementById("dateInput").value;
+      if (!val) return;
+      localStorage.setItem(DATE_KEY, val);
       localStorage.setItem(DONE_KEY, JSON.stringify([]));
       location.reload();
     }
 
+    function daysBetween(a, b) {
+      const oneDay = 24 * 60 * 60 * 1000;
+      return Math.ceil((b - a) / oneDay);
+    }
+
+    function formatDate(d) {
+      return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+    }
+
     function init() {
-      heading.textContent = `${totalDays} Days to Freedom`;
+      const today = new Date();
+      const end = new Date(targetDate);
+      const totalDays = daysBetween(today, end);
+
+      heading.textContent = `${totalDays} days remaining`;
+
       container.innerHTML = "";
 
-      for (let i = 1; i <= totalDays; i++) {
+      for (let i = 0; i < totalDays; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+
+        const label = formatDate(date);
+
         const day = document.createElement("div");
         day.className = "day";
-        day.innerHTML = `<span>Day ${i}</span>`;
+        day.innerHTML = `<span>${label}</span>`;
 
         if (completedDays.includes(i)) {
           day.classList.add("done");
           day.style.pointerEvents = "none";
         }
 
-        day.addEventListener("click", () => completeDay(i, day));
+        day.addEventListener("click", () => completeDay(i, day, totalDays));
         container.appendChild(day);
       }
 
-      updateProgress();
-      updateTitle();
+      updateProgress(totalDays);
+      updateTitle(totalDays);
     }
 
-    function completeDay(i, el) {
+    function completeDay(i, el, total) {
       if (!completedDays.includes(i)) {
         completedDays.push(i);
         el.classList.add("done");
         el.style.pointerEvents = "none";
         localStorage.setItem(DONE_KEY, JSON.stringify(completedDays));
-        updateProgress();
-        updateTitle();
+        updateProgress(total);
+        updateTitle(total);
       }
     }
 
-    function updateProgress() {
+    function updateProgress(total) {
       const count = completedDays.length;
       document.getElementById("progressText").textContent =
-        `${count} / ${totalDays} days completed`;
+        `${count} / ${total} days completed`;
       document.getElementById("progressFill").style.width =
-        (count / totalDays) * 100 + "%";
+        (count / total) * 100 + "%";
     }
 
-    function updateTitle() {
-      const remaining = totalDays - completedDays.length;
+    function updateTitle(total) {
+      const remaining = total - completedDays.length;
       let t = remaining > 1 ? `${remaining} days to go 💥`
               : remaining === 1 ? "Last day — finish strong ⚡"
-              : "You did it 🎉";
+              : "You are free 🎉";
       document.title = t;
       heading.textContent = t;
     }
