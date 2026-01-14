@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>16 Days</title>
+  <title>Days to Freedom</title>
 
   <style>
     :root {
@@ -16,12 +16,7 @@
       --animation-speed: 0.4s;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui; }
 
     body {
       background: var(--bg-color);
@@ -32,30 +27,15 @@
       padding: 20px;
     }
 
-    .app {
-      width: 100%;
-      max-width: 420px;
-    }
+    .app { width: 100%; max-width: 420px; }
 
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    header { text-align: center; margin-bottom: 20px; }
 
-    h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
+    h1 { font-size: 24px; margin-bottom: 6px; }
 
-    .quiet-text {
-      font-size: 14px;
-      color: var(--text-muted);
-    }
+    .quiet-text { font-size: 14px; color: var(--text-muted); }
 
-    .progress {
-      margin: 20px 0 10px;
-    }
+    .progress { margin: 20px 0 10px; }
 
     .progress-text {
       font-size: 14px;
@@ -91,33 +71,23 @@
       padding: 28px 0;
       text-align: center;
       cursor: pointer;
-      user-select: none;
-      transition:
-        background var(--animation-speed) ease,
-        transform var(--animation-speed) cubic-bezier(.34,1.56,.64,1),
-        box-shadow var(--animation-speed) ease;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
       box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
 
-    .day span {
-      font-size: 16px;
-      color: var(--text-muted);
-    }
+    .day span { color: var(--text-muted); font-size: 16px; }
 
     .day.done {
       background: var(--card-done);
       transform: scale(1.05);
       box-shadow: 0 0 25px rgba(34,197,94,0.6);
-      animation: pop 0.4s ease;
+      animation: pop .4s ease;
     }
 
-    .day.done span {
-      color: #052e16;
-      font-weight: 600;
-    }
+    .day.done span { color: #052e16; font-weight: 600; }
 
     @keyframes pop {
-      0% { transform: scale(0.9); }
+      0% { transform: scale(.9); }
       50% { transform: scale(1.15); }
       100% { transform: scale(1.05); }
     }
@@ -128,92 +98,138 @@
       font-size: 13px;
       color: var(--text-muted);
     }
+
+    .setup {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .setup input {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      text-align: center;
+    }
+
+    .setup button {
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      color: #022c22;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <header>
-      <h1 id="heading">16 Days</h1>
-      <div class="quiet-text">Let’s go — one day closer to freedom 🚀</div>
-    </header>
 
-    <div class="progress">
-      <div class="progress-text" id="progressText"></div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+    <div class="setup" id="setup">
+      <h1>How many days to freedom?</h1>
+      <input type="number" id="daysInput" placeholder="Enter number of days..." />
+      <button onclick="start()">Start</button>
     </div>
 
-    <div class="days" id="daysContainer"></div>
+    <div id="main" style="display:none;">
+      <header>
+        <h1 id="heading"></h1>
+        <div class="quiet-text">One step closer 🚀</div>
+      </header>
 
-    <footer>🔥 Keep going. You’re almost there.</footer>
+      <div class="progress">
+        <div class="progress-text" id="progressText"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div class="days" id="daysContainer"></div>
+
+      <footer>🔥 Keep going. You’re getting there.</footer>
+    </div>
   </div>
 
   <script>
-    const TOTAL_DAYS = 16;
-    const STORAGE_KEY = "sixteen-days-progress";
+    const TOTAL_KEY = "freedom-total-days";
+    const DONE_KEY = "freedom-done-days";
 
-    let completedDays = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let totalDays = parseInt(localStorage.getItem(TOTAL_KEY));
+    let completedDays = JSON.parse(localStorage.getItem(DONE_KEY)) || [];
 
+    const setup = document.getElementById("setup");
+    const main = document.getElementById("main");
     const container = document.getElementById("daysContainer");
     const heading = document.getElementById("heading");
 
-    for (let i = 1; i <= TOTAL_DAYS; i++) {
-      const day = document.createElement("div");
-      day.className = "day";
-      day.innerHTML = `<span>Day ${i}</span>`;
-
-      if (completedDays.includes(i)) {
-        day.classList.add("done");
-      }
-
-      day.addEventListener("click", () => {
-        if (!completedDays.includes(i)) {
-          completedDays.push(i);
-          day.classList.add("done");
-          day.style.pointerEvents = "none";
-          saveProgress();
-          updateProgress();
-          updateTitleAndHeading();
-        }
-      });
-
-      container.appendChild(day);
+    if (!totalDays) {
+      setup.style.display = "flex";
+    } else {
+      main.style.display = "block";
+      init();
     }
 
-    function saveProgress() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(completedDays));
+    function start() {
+      const val = parseInt(document.getElementById("daysInput").value);
+      if (!val || val < 1) return;
+      localStorage.setItem(TOTAL_KEY, val);
+      localStorage.setItem(DONE_KEY, JSON.stringify([]));
+      location.reload();
+    }
+
+    function init() {
+      heading.textContent = `${totalDays} Days to Freedom`;
+      container.innerHTML = "";
+
+      for (let i = 1; i <= totalDays; i++) {
+        const day = document.createElement("div");
+        day.className = "day";
+        day.innerHTML = `<span>Day ${i}</span>`;
+
+        if (completedDays.includes(i)) {
+          day.classList.add("done");
+          day.style.pointerEvents = "none";
+        }
+
+        day.addEventListener("click", () => completeDay(i, day));
+        container.appendChild(day);
+      }
+
+      updateProgress();
+      updateTitle();
+    }
+
+    function completeDay(i, el) {
+      if (!completedDays.includes(i)) {
+        completedDays.push(i);
+        el.classList.add("done");
+        el.style.pointerEvents = "none";
+        localStorage.setItem(DONE_KEY, JSON.stringify(completedDays));
+        updateProgress();
+        updateTitle();
+      }
     }
 
     function updateProgress() {
       const count = completedDays.length;
-      const percent = (count / TOTAL_DAYS) * 100;
-
       document.getElementById("progressText").textContent =
-        `${count} / ${TOTAL_DAYS} days completed`;
-
-      document.getElementById("progressFill").style.width = percent + "%";
+        `${count} / ${totalDays} days completed`;
+      document.getElementById("progressFill").style.width =
+        (count / totalDays) * 100 + "%";
     }
 
-    function updateTitleAndHeading() {
-      const remaining = TOTAL_DAYS - completedDays.length;
-      let text = "";
-
-      if (remaining > 1) {
-        text = `${remaining} days to go 💥`;
-      } else if (remaining === 1) {
-        text = `Last day — finish strong ⚡`;
-      } else {
-        text = `You did it 🎉`;
-      }
-
-      document.title = text;
-      heading.textContent = text;
+    function updateTitle() {
+      const remaining = totalDays - completedDays.length;
+      let t = remaining > 1 ? `${remaining} days to go 💥`
+              : remaining === 1 ? "Last day — finish strong ⚡"
+              : "You did it 🎉";
+      document.title = t;
+      heading.textContent = t;
     }
-
-    updateProgress();
-    updateTitleAndHeading();
   </script>
 </body>
 </html>
